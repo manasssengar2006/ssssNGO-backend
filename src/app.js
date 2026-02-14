@@ -12,6 +12,13 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://your-frontend.vercel.app"
+  ],
+  credentials: true,
+}));
 app.use("/api/member", require("./routes/member"));
 app.use("/api/membership", require("./routes/membership"));
 app.use("/api/auth", authRoutes);
