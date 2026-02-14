@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://your-frontend.vercel.app"
+    "https://ssss-ngo-frontend-he1wqeldv-manasssengar2006s-projects.vercel.app/"
   ],
   credentials: true,
 }));
