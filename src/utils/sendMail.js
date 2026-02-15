@@ -1,19 +1,16 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    pass: process.env.MAIL_PASS, // Gmail App Password
   },
 });
 
-const sendMail = async ({
-  to,
-  subject,
-  text,
-  attachments = [],
-}) => {
+module.exports = async ({ to, subject, text, attachments = [] }) => {
   await transporter.sendMail({
     from: `"NGO Team" <${process.env.MAIL_USER}>`,
     to,
@@ -22,5 +19,3 @@ const sendMail = async ({
     attachments,
   });
 };
-
-module.exports = sendMail;

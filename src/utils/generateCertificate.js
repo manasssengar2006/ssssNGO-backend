@@ -8,82 +8,112 @@ module.exports = async (user) => {
 
   const filePath = path.join(dir, `${user.memberId}-certificate.pdf`);
 
-  const doc = new PDFDocument({ size: "A4", margin: 40 });
+  const doc = new PDFDocument({
+    size: "A4",
+    margins: { top: 0, bottom: 0, left: 0, right: 0 },
+  });
+
   const stream = fs.createWriteStream(filePath);
   doc.pipe(stream);
 
-  // Border
-  doc.rect(10, 10, 575, 820).stroke("#296374");
+  // 🎨 HEADER GRADIENT
+  const header = doc.linearGradient(0, 0, 595, 0);
+  header.stop(0, "#0C2C55").stop(1, "#629FAD");
+  doc.rect(0, 0, 595, 130).fill(header);
 
-  // Logo
+  // BORDER
+  doc
+    .lineWidth(2)
+    .strokeColor("#296374")
+    .rect(15, 15, 565, 812)
+    .stroke();
+
+  // LOGO
   const logoPath = path.join("uploads", "logo.png");
   if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, 250, 30, { width: 90 });
+    doc.image(logoPath, 250, 25, { width: 90 });
   }
 
+  // NGO NAME
   doc
-    .moveDown(6)
-    .fontSize(22)
     .fillColor("#0C2C55")
-    .text("Svabhiman Siksha Sanskriti Samaajotthaan", {
+    .fontSize(24)
+    .font("Helvetica-Bold")
+    .text("Svabhiman Siksha Sanskriti Samaajotthaan", 0, 160, {
       align: "center",
     });
 
+  // SUBTITLE
   doc
-    .moveDown(0.5)
-    .fontSize(16)
     .fillColor("#296374")
+    .fontSize(18)
     .text("CERTIFICATE OF MEMBERSHIP", {
       align: "center",
     });
 
+  // BODY TEXT
   doc
     .moveDown(2)
-    .fontSize(12)
-    .text("This is to certify that", { align: "center" });
-
-  doc
-    .moveDown(0.5)
-    .fontSize(18)
-    .fillColor("#0C2C55")
-    .text(user.name, { align: "center" });
-
-  doc
-    .moveDown(0.5)
-    .fontSize(12)
     .fillColor("black")
+    .fontSize(14)
+    .text("This is to certify that", {
+      align: "center",
+    });
+
+  // MEMBER NAME
+  doc
+    .moveDown(0.5)
+    .fillColor("#0C2C55")
+    .fontSize(26)
+    .font("Helvetica-Bold")
+    .text(user.name, {
+      align: "center",
+    });
+
+  // DESCRIPTION
+  doc
+    .moveDown(0.5)
+    .fontSize(14)
+    .fillColor("black")
+    .font("Helvetica")
     .text("has been officially registered as a member of", {
       align: "center",
     });
 
   doc
-    .moveDown(0.5)
-    .fontSize(14)
+    .moveDown(0.3)
+    .fontSize(16)
     .fillColor("#296374")
+    .font("Helvetica-Bold")
     .text("Svabhiman Siksha Sanskriti Samaajotthaan", {
       align: "center",
     });
 
+  // MEMBER ID
   doc
     .moveDown(1)
-    .fontSize(12)
-    .text(`Member ID: ${user.memberId}`, { align: "center" });
+    .fontSize(14)
+    .fillColor("black")
+    .font("Helvetica")
+    .text(`Member ID: ${user.memberId}`, {
+      align: "center",
+    });
 
-  doc
-    .moveDown(4)
-    .fontSize(12)
-    .text("______________________", 80, 600)
-    .text("Authorized Signatory", 100, 620);
+  // SIGNATURES
+  const y = 650;
 
-  doc
-    .text("______________________", 380, 600)
-    .text("President", 420, 620);
+  doc.moveTo(80, y).lineTo(220, y).stroke();
+  doc.fontSize(12).text("Authorized Signatory", 80, y + 5);
+
+  doc.moveTo(380, y).lineTo(520, y).stroke();
+  doc.text("President", 380, y + 5);
 
   doc.end();
 
-  await new Promise((resolve) => {
+  await new Promise((resolve, reject) => {
     stream.on("finish", resolve);
+    stream.on("error", reject);
   });
 
-  return filePath.replace(/\\/g, "/");
+  return filePath;
 };

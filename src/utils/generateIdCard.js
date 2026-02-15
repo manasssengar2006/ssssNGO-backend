@@ -8,57 +8,64 @@ module.exports = async (user) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
   const filePath = path.join(dir, `${user.memberId}.pdf`);
-
-  const doc = new PDFDocument({
-    size: [350, 220],
-    margin: 10,
-  });
-
+  const doc = new PDFDocument({ size: [350, 220], margin: 0 });
   const stream = fs.createWriteStream(filePath);
   doc.pipe(stream);
 
-  // Border
-  doc.rect(5, 5, 340, 210).stroke("#296374");
+  // 🎨 Gradient Background
+  const gradient = doc.linearGradient(0, 0, 350, 220);
+  gradient.stop(0, "#0C2C55").stop(1, "#296374");
+  doc.rect(0, 0, 350, 220).fill(gradient);
 
-  // Logo
+  // White panel
+  doc.roundedRect(10, 10, 330, 200, 10).fill("#ffffff");
+
+  // 🏢 Logo
   const logoPath = path.join("uploads", "logo.png");
   if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, 15, 15, { width: 50 });
+    doc.image(logoPath, 20, 20, { width: 50 });
   }
 
   // NGO Name
   doc
-    .fontSize(12)
     .fillColor("#0C2C55")
-    .text("Svabhiman Siksha Sanskriti Samaajotthaan", 80, 20);
+    .fontSize(12)
+    .text("Svabhiman Siksha Sanskriti Samaajotthaan", 80, 25);
 
   doc
+    .fillColor("#629FAD")
     .fontSize(10)
-    .fillColor("#296374")
-    .text("NGO Member Identity Card", 80, 40);
+    .text("Official Member ID", 80, 45);
 
-  // Member info
+  // Divider
+  doc.moveTo(20, 65).lineTo(330, 65).stroke("#629FAD");
+
+  // Member Info
   doc
-    .fontSize(11)
     .fillColor("black")
+    .fontSize(11)
     .text(`Name: ${user.name}`, 20, 80)
     .text(`Member ID: ${user.memberId}`, 20, 100)
     .text(`Email: ${user.email}`, 20, 120);
 
-  // QR Code
-  const qrData = `NGO MEMBER\nID: ${user.memberId}\nName: ${user.name}`;
-  const qrImage = await QRCode.toDataURL(qrData);
+  // 🔳 QR Code
+  const qr = await QRCode.toDataURL(
+    `NGO MEMBER\nID:${user.memberId}\n${user.name}`
+  );
+  doc.image(qr, 240, 80, { width: 80 });
 
-  doc.image(qrImage, 240, 80, { width: 80 });
-
-  doc.fontSize(9).text("Authorized by Svabhiman NGO", 20, 180);
+  // Footer
+  doc
+    .fontSize(9)
+    .fillColor("#888")
+    .text("Authorized by Svabhiman NGO", 20, 180);
 
   doc.end();
 
-  // WAIT FOR FILE TO FINISH WRITING
-  await new Promise((resolve) => {
+  await new Promise((resolve, reject) => {
     stream.on("finish", resolve);
+    stream.on("error", reject);
   });
 
-  return filePath.replace(/\\/g, "/");
+  return filePath;
 };

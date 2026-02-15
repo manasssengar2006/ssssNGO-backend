@@ -20,34 +20,26 @@ router.post(
         ...body,
         userId: req.user.id,
 
-        photoFile: req.files.photo[0].filename,
-        aadhaarFile: req.files.aadhaar[0].filename,
-        panFile: req.files.pan[0].filename,
+        // SAFE FILE ACCESS
+        photoFile: req.files?.photo?.[0]?.filename,
+        aadhaarFile: req.files?.aadhaar?.[0]?.filename,
+        panFile: req.files?.pan?.[0]?.filename,
       });
 
+      // notify admin
       await sendMail({
         to: process.env.MAIL_USER,
         subject: "New Membership Request",
-        text: `
-Name: ${body.name}
-Father: ${body.fatherName}
-Mother: ${body.motherName}
-Phone: ${body.phone}
-Income: ${body.annualIncome}
-Source: ${body.incomeSource}
-Address: ${body.currentAddress}
-        `,
-        attachments: [
-          { path: `uploads/docs/${request.photoFile}` },
-          { path: `uploads/docs/${request.aadhaarFile}` },
-          { path: `uploads/docs/${request.panFile}` },
-        ],
+        text: `New request from ${body.name}`,
       });
 
       res.json({ success: true });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Failed" });
+      console.error("REQUEST ERROR:", err);
+      res.status(500).json({
+        message: "Failed",
+        error: err.message,
+      });
     }
   }
 );
