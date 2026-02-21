@@ -1,76 +1,28 @@
 const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
+const upload = require("../middleware/upload");
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
-const upload = require("../middleware/upload");
 
-// GET ALL POSTS
-router.get("/", async (req, res) => {
-  const posts = await Post.find().sort({ createdAt: -1 });
-  res.json(posts);
-});
+// CREATE POST
+router.post("/", auth, admin, upload.array("images", 10), async (req, res) => {
+  try {
+    if (!req.files) return res.status(400).json({ error: "No images" });
 
-// GET SINGLE POST
-router.get("/:id", async (req, res) => {
-  const post = await Post.findById(req.params.id);
-  res.json(post);
-});
+    // get cloudinary URLs
+    const imageUrls = req.files.map(file => file.path);
 
-// CREATE POST (ADMIN)
-router.post("/", auth, admin, upload.single("image"), async (req, res) => {
-  const post = await Post.create({
-    caption: req.body.caption,
-    image: req.file.filename,
-  });
-  res.json(post);
-});
+    const post = await Post.create({
+      caption: req.body.caption,
+      images: imageUrls,
+    });
 
-// UPDATE POST (ADMIN)
-router.put("/:id", auth, admin, upload.single("image"), async (req, res) => {
-  const update = { caption: req.body.caption };
-
-  if (req.file) {
-    update.image = req.file.filename;
+    res.json(post);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
-
-  const post = await Post.findByIdAndUpdate(req.params.id, update, {
-    new: true,
-  });
-
-  res.json(post);
-});
-
-// DELETE POST (ADMIN)
-router.delete("/:id", auth, admin, async (req, res) => {
-  await Post.findByIdAndDelete(req.params.id);
-  res.json({ message: "Post deleted" });
-});
-
-// LIKE / UNLIKE
-router.post("/:id/like", auth, async (req, res) => {
-  const post = await Post.findById(req.params.id);
-  const index = post.likes.indexOf(req.user.id);
-
-  if (index === -1) post.likes.push(req.user.id);
-  else post.likes.splice(index, 1);
-
-  await post.save();
-  res.json(post.likes);
-});
-
-// COMMENT
-router.post("/:id/comment", auth, async (req, res) => {
-  const post = await Post.findById(req.params.id);
-
-  post.comments.push({
-    userId: req.user.id,
-    userName: req.body.userName,
-    text: req.body.text,
-  });
-
-  await post.save();
-  res.json(post.comments);
 });
 
 module.exports = router;

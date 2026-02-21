@@ -1,19 +1,24 @@
 const path = require("path");
-
-// 🔥 FORCE LOAD .env (absolute path)
-require("dotenv").config({
-  path: path.join(__dirname, "../.env"),
-});
-
-console.log("ENV CHECK:", process.env.MONGO_URI); // debug
+const fs = require("fs");
+require("dotenv").config();
 
 const app = require("./app");
 const connectDB = require("./config/db");
 
+// ================= CREATE UPLOAD FOLDER =================
+const uploadPath = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+  console.log("Uploads folder created");
+}
+
+// ================= DB =================
 connectDB();
 
+// ================= SERVER =================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("server is running in " + PORT);
+  console.log("Server running on port " + PORT);
 });
