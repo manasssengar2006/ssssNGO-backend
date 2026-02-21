@@ -11,10 +11,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://ssss-ngo-frontend-he1wqeldv-manasssengar2006s-projects.vercel.app"
-  ],
+  origin: true, // allow all origins
   credentials: true,
 }));
 
