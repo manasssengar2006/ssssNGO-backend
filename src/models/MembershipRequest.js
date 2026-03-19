@@ -22,6 +22,12 @@ const schema = new mongoose.Schema({
   aadhaarAddress: String,
   currentAddress: String,
 
+  // NEW
+  maritalStatus: String,
+  wifeName: String,
+  children: String,
+  childrenNames: String,
+
   photoFile: String,
   aadhaarFile: String,
   panFile: String,
