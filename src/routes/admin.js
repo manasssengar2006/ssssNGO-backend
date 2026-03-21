@@ -58,6 +58,7 @@ router.post("/approve/:id", auth, admin, async (req, res) => {
     // generate memberId
     user.joined = true;
     user.memberId = `SVB-${Date.now()}`;
+    await user.save();
 
     // use REQUEST data for PDFs
     const pdfUser = {
@@ -113,5 +114,39 @@ router.post("/reject/:id", auth, admin, async (req, res) => {
     res.status(500).json({ message: "Reject failed" });
   }
 });
+router.get("/members", auth, admin, async (req, res) => {
+  try {
+    const users = await User.find({ joined: true }).select(
+      "_id name email memberId createdAt"
+    );
 
+    const members = await Promise.all(
+      users.map(async (u) => {
+        const reqData = await MembershipRequest.findOne({
+          userId: u._id.toString(),
+        });
+
+        const city =
+          reqData?.city ||
+          reqData?.currentAddress?.split(",")[0] ||
+          "N/A";
+
+        return {
+          _id: u._id,
+          name: u.name,
+          email: u.email,
+          memberId: u.memberId,
+          city,
+          phone: reqData?.phone || "N/A",
+          createdAt: u.createdAt,
+        };
+      })
+    );
+
+    res.json(members);
+  } catch (err) {
+    console.error("GET MEMBERS ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch members" });
+  }
+});
 module.exports = router;

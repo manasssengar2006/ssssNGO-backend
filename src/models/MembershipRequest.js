@@ -22,7 +22,11 @@ const schema = new mongoose.Schema({
   aadhaarAddress: String,
   currentAddress: String,
 
-  // NEW
+  // ✅ ADD THIS
+  city: String,
+  state: String,
+  pincode: String,
+
   maritalStatus: String,
   wifeName: String,
   children: String,
