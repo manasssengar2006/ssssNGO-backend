@@ -7,6 +7,12 @@ const User = require("../models/User");
 const sendMail = require("../utils/sendMail");
 
 
+// ================= TEST ROUTE (OPTIONAL) =================
+router.get("/", (req, res) => {
+  res.send("Membership API working ✅");
+});
+
+
 // ================= CREATE REQUEST =================
 router.post(
   "/request",
@@ -22,11 +28,12 @@ router.post(
 
       const request = await MembershipRequest.create({
         ...body,
-        userId: req.user.id, // string
+        userId: req.user.id,
 
-        photoFile: req.files?.photo?.[0]?.filename,
-        aadhaarFile: req.files?.aadhaar?.[0]?.filename,
-        panFile: req.files?.pan?.[0]?.filename,
+        // 🔥 SAFE FILE ACCESS
+        photoFile: req.files?.photo?.[0]?.filename || "",
+        aadhaarFile: req.files?.aadhaar?.[0]?.filename || "",
+        panFile: req.files?.pan?.[0]?.filename || "",
       });
 
       await sendMail({
@@ -35,7 +42,7 @@ router.post(
         text: `New request from ${body.name}`,
       });
 
-      res.json({ success: true });
+      res.json({ success: true, request });
     } catch (err) {
       console.error("REQUEST ERROR:", err);
       res.status(500).json({
@@ -59,7 +66,6 @@ router.get("/search", auth, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    // 1️⃣ Get all joined users
     const users = await User.find({ joined: true }).select(
       "_id name email memberId"
     );
@@ -70,7 +76,6 @@ router.get("/search", auth, async (req, res) => {
           userId: u._id.toString(),
         };
 
-        // 🔥 Apply city filter ONLY if provided
         if (city) {
           query.city = { $regex: city, $options: "i" };
         }
@@ -84,10 +89,10 @@ router.get("/search", auth, async (req, res) => {
           name: u.name,
           email: u.email,
           memberId: u.memberId,
-          phone: reqData.phone,
-          city: reqData.city,
-          state: reqData.state,
-          photoFile: reqData.photoFile,
+          phone: reqData.phone || "",
+          city: reqData.city || "",
+          state: reqData.state || "",
+          photoFile: reqData.photoFile || "",
         };
       })
     );
