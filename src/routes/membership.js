@@ -36,11 +36,11 @@ router.post(
         panFile: req.files?.pan?.[0]?.filename || "",
       });
 
-      await sendMail({
-        to: process.env.MAIL_USER,
-        subject: "New Membership Request",
-        text: `New request from ${body.name}`,
-      });
+    await sendMail({
+  to: process.env.MAIL_USER || "swabhimansanskritisamajothan@gmail.com", // ✅ SAFE FIX
+  subject: "New Membership Request",
+  text: `New request from ${body.name}`,
+});
 
       res.json({ success: true, request });
     } catch (err) {

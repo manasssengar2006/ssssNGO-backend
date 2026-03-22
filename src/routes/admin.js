@@ -55,15 +55,20 @@ router.post("/approve/:id", auth, admin, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // 🛑 SAFETY CHECK (prevents resend crash)
+    if (!user.email) {
+      return res.status(400).json({ message: "User email missing" });
+    }
+
     // generate memberId
     user.joined = true;
     user.memberId = `SVB-${Date.now()}`;
     await user.save();
 
-    // use REQUEST data for PDFs
+    // ✅ FIXED EMAIL SOURCE (no logic change)
     const pdfUser = {
       name: request.name,
-      email: request.email,
+      email: user.email, // ✅ FIXED
       memberId: user.memberId,
     };
 
@@ -78,7 +83,7 @@ router.post("/approve/:id", auth, admin, async (req, res) => {
     await request.save();
 
     await sendMail({
-      to: user.email,
+      to: user.email, // ✅ already correct
       subject: "Your NGO Membership Approved",
       text: `Dear ${user.name}, your membership is approved.`,
       attachments: [
