@@ -3,23 +3,20 @@ const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-module.exports = async ({ to, subject, text, attachments = [] }) => {
+module.exports = async ({ to, subject, text }) => {
   try {
-    await resend.emails.send({
-      from: "NGO Team <onboarding@resend.dev>",
+    console.log("Sending email:", { to, subject, text });
+
+    const response = await resend.emails.send({
+      from: "onboarding@resend.dev",
       to,
       subject,
-      html: `
-  <div style="font-family:sans-serif">
-    <h2>NGO Team</h2>
-    <p>${text}</p>
-  </div>
-`,
-      attachments,
+      html: `<p>${text}</p>`,
     });
 
-    console.log("✅ Email sent");
+    console.log("✅ Email sent:", response);
   } catch (err) {
-    console.error("❌ Email error:", err);
+    console.error("❌ FULL ERROR:", err);
+    console.error("❌ RESPONSE:", err?.response?.data);
   }
 };
