@@ -25,6 +25,11 @@ exports.approveMember = async (req, res) => {
 
     console.log("User found:", user.email);
 
+    // 🛑 SAFETY CHECK (no logic change, just prevents crash)
+    if (!user.email) {
+      return res.status(400).json({ error: "User email missing" });
+    }
+
     // 3️⃣ Generate memberId
     const memberId = "NGO" + Date.now();
 
@@ -39,10 +44,10 @@ exports.approveMember = async (req, res) => {
 
     console.log("User + Request updated");
 
-    // 6️⃣ Generate PDFs using REQUEST DATA
+    // 6️⃣ Generate PDFs (FIXED EMAIL SOURCE)
     const pdfUser = {
       name: request.name,
-      email: request.email,
+      email: user.email, // ✅ FIXED
       memberId,
     };
 
@@ -52,10 +57,10 @@ exports.approveMember = async (req, res) => {
     console.log("Generating Certificate...");
     const certificate = await generateCertificate(pdfUser);
 
-    // 7️⃣ Send mail
+    // 7️⃣ Send mail (FIXED EMAIL SOURCE)
     console.log("Sending mail...");
     await sendMail({
-      to: request.email,
+      to: user.email, // ✅ FIXED
       subject: "NGO Membership Approved 🎉",
       text: `Hello ${request.name}, your membership is approved.`,
       attachments: [
