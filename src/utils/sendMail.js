@@ -9,7 +9,12 @@ module.exports = async ({ to, subject, text, attachments = [] }) => {
       from: "NGO Team <onboarding@resend.dev>",
       to,
       subject,
-      html: `<p>${text}</p>`,
+      html: `
+  <div style="font-family:sans-serif">
+    <h2>NGO Team</h2>
+    <p>${text}</p>
+  </div>
+`,
       attachments,
     });
 
