@@ -30,7 +30,7 @@ module.exports = async (user) => {
   doc
     .fillColor("#0C2C55")
     .fontSize(12)
-    .text("Svabhiman Siksha Sanskriti Samaajotthaan", 80, 25);
+    .text("Swabhiman Shiksha Sanskriti Samajothaan", 80, 25);
 
   doc
     .fillColor("#629FAD")
@@ -58,7 +58,7 @@ module.exports = async (user) => {
   doc
     .fontSize(9)
     .fillColor("#888")
-    .text("Authorized by Svabhiman NGO", 20, 180);
+    .text("Authorized by Swabhiman Nyas", 20, 180);
 
   doc.end();
 

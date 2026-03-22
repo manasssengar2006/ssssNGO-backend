@@ -85,7 +85,7 @@ module.exports = async (user) => {
     .fontSize(16)
     .fillColor("#296374")
     .font("Helvetica-Bold")
-    .text("Svabhiman Siksha Sanskriti Samaajotthaan", {
+    .text("Swabhiman Shiksha Sanskriti Samajothan", {
       align: "center",
     });
 
