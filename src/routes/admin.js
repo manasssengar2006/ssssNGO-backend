@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const admin = require("../middleware/admin");
-
+const fs = require("fs");
 const MembershipRequest = require("../models/MembershipRequest");
 const User = require("../models/User");
 const Post = require("../models/Post");
@@ -55,7 +55,7 @@ router.post("/approve/:id", auth, admin, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 🛑 SAFETY CHECK (prevents resend crash)
+    // 🛑 SAFETY CHECK
     if (!user.email) {
       return res.status(400).json({ message: "User email missing" });
     }
@@ -65,16 +65,18 @@ router.post("/approve/:id", auth, admin, async (req, res) => {
     user.memberId = `SVB-${Date.now()}`;
     await user.save();
 
-    // ✅ FIXED EMAIL SOURCE (no logic change)
+    // PDF data (✅ correct source)
     const pdfUser = {
       name: request.name,
-      email: user.email, // ✅ FIXED
+      email: user.email,
       memberId: user.memberId,
     };
 
+    // generate PDFs
     const idCardPath = await generateIdCard(pdfUser);
     const certPath = await generateCertificate(pdfUser);
 
+    // save paths
     user.idCardPath = idCardPath;
     user.certificatePath = certPath;
     await user.save();
@@ -82,13 +84,24 @@ router.post("/approve/:id", auth, admin, async (req, res) => {
     request.status = "approved";
     await request.save();
 
+    // 🔥 FIX: convert files → buffer (IMPORTANT)
+    const idCardBuffer = fs.readFileSync(idCardPath);
+    const certBuffer = fs.readFileSync(certPath);
+
+    // send email with attachments
     await sendMail({
-      to: user.email, // ✅ already correct
-      subject: "Your NGO Membership Approved",
+      to: user.email,
+      subject: "Your NGO Membership Approved 🎉",
       text: `Dear ${user.name}, your membership is approved.`,
       attachments: [
-        { filename: "ID-Card.pdf", path: idCardPath },
-        { filename: "Certificate.pdf", path: certPath },
+        {
+          filename: "ID-Card.pdf",
+          content: idCardBuffer, // ✅ FIXED
+        },
+        {
+          filename: "Certificate.pdf",
+          content: certBuffer, // ✅ FIXED
+        },
       ],
     });
 
