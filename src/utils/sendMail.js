@@ -11,7 +11,7 @@ module.exports = async ({ to, subject, text }) => {
 
   try {
     const response = await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: "admin@swabhimanshikshasanskriti.in",
       to,
       subject: subject || "No Subject",
       html: `<p>${text || "No content"}</p>`,
