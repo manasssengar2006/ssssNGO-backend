@@ -34,6 +34,7 @@ router.post(
         panFile: req.files?.pan?.[0]?.filename || "",
       });
 
+      // ✅ FIXED TEMPLATE STRING
       await sendMail({
         to:
           process.env.MAIL_USER ||
@@ -56,8 +57,7 @@ router.post(
 // ================= SEARCH MEMBERS =================
 router.get("/search", auth, async (req, res) => {
   try {
-    // ✅ UPDATED (added country & state)
-    const { city, state, country } = req.query;
+    const { city } = req.query;
 
     const isAdmin = req.user.role === "admin";
     const isMember = req.user.joined;
@@ -76,15 +76,6 @@ router.get("/search", auth, async (req, res) => {
           userId: u._id.toString(),
         };
 
-        // ✅ ADDED
-        if (country) {
-          query.country = { $regex: country, $options: "i" };
-        }
-
-        if (state) {
-          query.state = { $regex: state, $options: "i" };
-        }
-
         if (city) {
           query.city = { $regex: city, $options: "i" };
         }
@@ -101,7 +92,6 @@ router.get("/search", auth, async (req, res) => {
           phone: reqData.phone || "",
           city: reqData.city || "",
           state: reqData.state || "",
-          country: reqData.country || "", // ✅ ADDED
           photoFile: reqData.photoFile || "",
         };
       })
@@ -126,14 +116,7 @@ router.get("/cities", auth, async (req, res) => {
       });
     }
 
-    // ✅ OPTIONAL FILTER SUPPORT ADDED
-    const { state, country } = req.query;
-
-    const filter = {};
-    if (country) filter.country = country;
-    if (state) filter.state = state;
-
-    const cities = await MembershipRequest.distinct("city", filter);
+    const cities = await MembershipRequest.distinct("city");
 
     res.json(cities);
   } catch (err) {
