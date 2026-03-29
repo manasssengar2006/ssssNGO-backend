@@ -6,12 +6,10 @@ const MembershipRequest = require("../models/MembershipRequest");
 const User = require("../models/User");
 const sendMail = require("../utils/sendMail");
 
-
 // ================= TEST ROUTE =================
 router.get("/", (req, res) => {
   res.send("Membership API working ✅");
 });
-
 
 // ================= CREATE REQUEST =================
 router.post(
@@ -24,84 +22,27 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      // ✅ SAFE DESTRUCTURING
-      const {
-        name,
-        fatherName,
-        motherName,
-        phone,
-        email,
-        aadhaarNumber,
-        panNumber,
-        country,
-        state,
-        city,
-        pincode,
-        annualIncome,
-        incomeSource,
-        fatherOccupation,
-        motherOccupation,
-        aadhaarAddress,
-        currentAddress,
-        siblings,
-        maritalStatus,
-        wifeName,
-        children,
-        childrenNames,
-      } = req.body;
+      const body = req.body;
 
       const request = await MembershipRequest.create({
+        ...body,
         userId: req.user.id,
 
-        name,
-        fatherName,
-        motherName,
-        phone,
-        email,
-        aadhaarNumber,
-        panNumber,
-
-        country, // ✅ NEW
-        state,
-        city,
-        pincode,
-
-        annualIncome,
-        incomeSource,
-        fatherOccupation,
-        motherOccupation,
-
-        aadhaarAddress,
-        currentAddress,
-
-        siblings,
-
-        maritalStatus,
-        wifeName,
-        children,
-        childrenNames,
-
-        // 📄 FILES
+        // ✅ SAFE FILE ACCESS
         photoFile: req.files?.photo?.[0]?.filename || "",
         aadhaarFile: req.files?.aadhaar?.[0]?.filename || "",
         panFile: req.files?.pan?.[0]?.filename || "",
       });
 
-      // ✉️ EMAIL
       await sendMail({
-        to: process.env.MAIL_USER || "swabhimansanskritisamajothan@gmail.com",
+        to:
+          process.env.MAIL_USER ||
+          "swabhimansanskritisamajothan@gmail.com",
         subject: "New Membership Request",
-        text: `New membership request:
-
-Name: ${name}
-Phone: ${phone}
-Location: ${city}, ${state}, ${country}
-Email: ${email}
-`,
+        text: `New request from ${body.name}`,
       });
 
       res.json({ success: true, request });
-
     } catch (err) {
       console.error("REQUEST ERROR:", err);
       res.status(500).json({
@@ -112,10 +53,10 @@ Email: ${email}
   }
 );
 
-
 // ================= SEARCH MEMBERS =================
 router.get("/search", auth, async (req, res) => {
   try {
+    // ✅ UPDATED (added country & state)
     const { city, state, country } = req.query;
 
     const isAdmin = req.user.role === "admin";
@@ -135,7 +76,7 @@ router.get("/search", auth, async (req, res) => {
           userId: u._id.toString(),
         };
 
-        // 🔍 FILTERS
+        // ✅ ADDED
         if (country) {
           query.country = { $regex: country, $options: "i" };
         }
@@ -160,22 +101,20 @@ router.get("/search", auth, async (req, res) => {
           phone: reqData.phone || "",
           city: reqData.city || "",
           state: reqData.state || "",
-          country: reqData.country || "",
+          country: reqData.country || "", // ✅ ADDED
           photoFile: reqData.photoFile || "",
         };
       })
     );
 
     res.json(members.filter(Boolean));
-
   } catch (err) {
     console.error("SEARCH ERROR:", err);
     res.status(500).json({ message: "Search failed" });
   }
 });
 
-
-// ================= GET CITIES =================
+// ================= GET ALL CITIES =================
 router.get("/cities", auth, async (req, res) => {
   try {
     const isAdmin = req.user.role === "admin";
@@ -187,6 +126,7 @@ router.get("/cities", auth, async (req, res) => {
       });
     }
 
+    // ✅ OPTIONAL FILTER SUPPORT ADDED
     const { state, country } = req.query;
 
     const filter = {};
@@ -196,7 +136,6 @@ router.get("/cities", auth, async (req, res) => {
     const cities = await MembershipRequest.distinct("city", filter);
 
     res.json(cities);
-
   } catch (err) {
     console.error("CITIES ERROR:", err);
     res.status(500).json({
@@ -204,6 +143,5 @@ router.get("/cities", auth, async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
