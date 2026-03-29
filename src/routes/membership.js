@@ -7,7 +7,7 @@ const User = require("../models/User");
 const sendMail = require("../utils/sendMail");
 
 
-// ================= TEST ROUTE (OPTIONAL) =================
+// ================= TEST ROUTE =================
 router.get("/", (req, res) => {
   res.send("Membership API working ✅");
 });
@@ -24,25 +24,84 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const body = req.body;
+      // ✅ SAFE DESTRUCTURING
+      const {
+        name,
+        fatherName,
+        motherName,
+        phone,
+        email,
+        aadhaarNumber,
+        panNumber,
+        country,
+        state,
+        city,
+        pincode,
+        annualIncome,
+        incomeSource,
+        fatherOccupation,
+        motherOccupation,
+        aadhaarAddress,
+        currentAddress,
+        siblings,
+        maritalStatus,
+        wifeName,
+        children,
+        childrenNames,
+      } = req.body;
 
       const request = await MembershipRequest.create({
-        ...body,
         userId: req.user.id,
 
-        // 🔥 SAFE FILE ACCESS
+        name,
+        fatherName,
+        motherName,
+        phone,
+        email,
+        aadhaarNumber,
+        panNumber,
+
+        country, // ✅ NEW
+        state,
+        city,
+        pincode,
+
+        annualIncome,
+        incomeSource,
+        fatherOccupation,
+        motherOccupation,
+
+        aadhaarAddress,
+        currentAddress,
+
+        siblings,
+
+        maritalStatus,
+        wifeName,
+        children,
+        childrenNames,
+
+        // 📄 FILES
         photoFile: req.files?.photo?.[0]?.filename || "",
         aadhaarFile: req.files?.aadhaar?.[0]?.filename || "",
         panFile: req.files?.pan?.[0]?.filename || "",
       });
 
-    await sendMail({
-  to: process.env.MAIL_USER || "swabhimansanskritisamajothan@gmail.com", // ✅ SAFE FIX
-  subject: "New Membership Request",
-  text: `New request from ${body.name}`,
-});
+      // ✉️ EMAIL
+      await sendMail({
+        to: process.env.MAIL_USER || "swabhimansanskritisamajothan@gmail.com",
+        subject: "New Membership Request",
+        text: `New membership request:
+
+Name: ${name}
+Phone: ${phone}
+Location: ${city}, ${state}, ${country}
+Email: ${email}
+`,
+      });
 
       res.json({ success: true, request });
+
     } catch (err) {
       console.error("REQUEST ERROR:", err);
       res.status(500).json({
@@ -57,7 +116,7 @@ router.post(
 // ================= SEARCH MEMBERS =================
 router.get("/search", auth, async (req, res) => {
   try {
-    const { city } = req.query;
+    const { city, state, country } = req.query;
 
     const isAdmin = req.user.role === "admin";
     const isMember = req.user.joined;
@@ -76,6 +135,15 @@ router.get("/search", auth, async (req, res) => {
           userId: u._id.toString(),
         };
 
+        // 🔍 FILTERS
+        if (country) {
+          query.country = { $regex: country, $options: "i" };
+        }
+
+        if (state) {
+          query.state = { $regex: state, $options: "i" };
+        }
+
         if (city) {
           query.city = { $regex: city, $options: "i" };
         }
@@ -92,12 +160,14 @@ router.get("/search", auth, async (req, res) => {
           phone: reqData.phone || "",
           city: reqData.city || "",
           state: reqData.state || "",
+          country: reqData.country || "",
           photoFile: reqData.photoFile || "",
         };
       })
     );
 
     res.json(members.filter(Boolean));
+
   } catch (err) {
     console.error("SEARCH ERROR:", err);
     res.status(500).json({ message: "Search failed" });
@@ -105,7 +175,7 @@ router.get("/search", auth, async (req, res) => {
 });
 
 
-// ================= GET ALL CITIES =================
+// ================= GET CITIES =================
 router.get("/cities", auth, async (req, res) => {
   try {
     const isAdmin = req.user.role === "admin";
@@ -117,9 +187,16 @@ router.get("/cities", auth, async (req, res) => {
       });
     }
 
-    const cities = await MembershipRequest.distinct("city");
+    const { state, country } = req.query;
+
+    const filter = {};
+    if (country) filter.country = country;
+    if (state) filter.state = state;
+
+    const cities = await MembershipRequest.distinct("city", filter);
 
     res.json(cities);
+
   } catch (err) {
     console.error("CITIES ERROR:", err);
     res.status(500).json({

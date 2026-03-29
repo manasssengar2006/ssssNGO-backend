@@ -1,45 +1,72 @@
 const mongoose = require("mongoose");
 
-const schema = new mongoose.Schema({
-  userId: String,
+const membershipSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: String,
+    },
 
-  name: String,
-  fatherName: String,
-  motherName: String,
+    // BASIC
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    fatherName: String,
+    motherName: String,
 
-  phone: String,
-  email: String,
+    phone: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+    },
 
-  aadhaarNumber: String,
-  panNumber: String,
+    // IDENTITY
+    aadhaarNumber: String,
+    panNumber: String,
 
-  annualIncome: String,
-  incomeSource: String,
+    // LOCATION ✅ UPDATED
+    country: String,   // 🔥 ADDED
+    state: String,
+    city: String,
+    pincode: String,
 
-  fatherOccupation: String,
-  motherOccupation: String,
+    // INCOME
+    annualIncome: String,
+    incomeSource: String,
 
-  aadhaarAddress: String,
-  currentAddress: String,
+    fatherOccupation: String,
+    motherOccupation: String,
 
-  // ✅ ADD THIS
-  city: String,
-  state: String,
-  pincode: String,
+    // ADDRESS
+    aadhaarAddress: String,
+    currentAddress: String,
 
-  maritalStatus: String,
-  wifeName: String,
-  children: String,
-  childrenNames: String,
+    // FAMILY
+    siblings: String,
 
-  photoFile: String,
-  aadhaarFile: String,
-  panFile: String,
+    maritalStatus: String,
+    wifeName: String,
+    children: String,
+    childrenNames: String,
 
-  status: {
-    type: String,
-    default: "pending",
+    // DOCUMENTS ✅ IMPROVED NAMING
+    photoFile: String,
+    aadhaarFile: String,
+    panFile: String,
+
+    // STATUS
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"], // 🔥 better control
+      default: "pending",
+    },
   },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("MembershipRequest", schema);
+module.exports = mongoose.model("MembershipRequest", membershipSchema);
