@@ -11,8 +11,13 @@ const commentSchema = new mongoose.Schema(
 
 const postSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     images: {
-      type: [String], // now URLs
+      type: [String],
       required: true,
     },
     caption: { type: String, default: "" },
