@@ -2,6 +2,9 @@ const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
 
+const ORG_NAME = "Swabhiman Shiksha Sanskriti Samajotthan Nyas";
+
+// Expects: { name, memberId, membershipType, validTill }
 module.exports = async (user) => {
   const dir = path.join("uploads", "certificates");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -16,97 +19,202 @@ module.exports = async (user) => {
   const stream = fs.createWriteStream(filePath);
   doc.pipe(stream);
 
-  // 🎨 HEADER GRADIENT
-  const header = doc.linearGradient(0, 0, 595, 0);
-  header.stop(0, "#0C2C55").stop(1, "#629FAD");
-  doc.rect(0, 0, 595, 130).fill(header);
+  const PAGE_W = 595;
+  const PAGE_H = 842;
 
-  // BORDER
+  // ---------- Background ----------
+  doc.rect(0, 0, PAGE_W, PAGE_H).fill("#fdfdfb");
+
+  // ---------- Header gradient ----------
+  const header = doc.linearGradient(0, 0, PAGE_W, 0);
+  header.stop(0, "#0C2C55").stop(1, "#296374");
+  doc.rect(0, 0, PAGE_W, 150).fill(header);
+  doc.rect(0, 150, PAGE_W, 6).fill("#E1B12C");
+
+  // ---------- Ornamental double border ----------
   doc
-    .lineWidth(2)
-    .strokeColor("#296374")
-    .rect(15, 15, 565, 812)
+    .lineWidth(2.5)
+    .strokeColor("#0C2C55")
+    .rect(18, 18, PAGE_W - 36, PAGE_H - 36)
     .stroke();
 
-  // LOGO
+  doc
+    .lineWidth(1)
+    .strokeColor("#E1B12C")
+    .rect(26, 26, PAGE_W - 52, PAGE_H - 52)
+    .stroke();
+
+  // corner flourishes (simple quarter-circle accents)
+  const cornerSize = 22;
+  [
+    [26, 26],
+    [PAGE_W - 26 - cornerSize, 26],
+    [26, PAGE_H - 26 - cornerSize],
+    [PAGE_W - 26 - cornerSize, PAGE_H - 26 - cornerSize],
+  ].forEach(([x, y]) => {
+    doc.circle(x + cornerSize / 2, y + cornerSize / 2, 4).fill("#E1B12C");
+  });
+
+  // ---------- Logo ----------
   const logoPath = path.join("uploads", "logo.png");
   if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, 250, 25, { width: 90 });
+    doc.image(logoPath, PAGE_W / 2 - 40, 25, { width: 80 });
   }
 
-  // NGO NAME
+  // ---------- Org name ----------
   doc
-    .fillColor("#0C2C55")
-    .fontSize(24)
+    .fillColor("#ffffff")
     .font("Helvetica-Bold")
-    .text("Svabhiman Siksha Sanskriti Samaajotthaan", 0, 160, {
+    .fontSize(21)
+    .text(ORG_NAME, 40, 105, {
       align: "center",
+      width: PAGE_W - 80,
     });
 
-  // SUBTITLE
+  // ---------- Title ----------
   doc
-    .fillColor("#296374")
-    .fontSize(18)
-    .text("CERTIFICATE OF MEMBERSHIP", {
-      align: "center",
-    });
-
-  // BODY TEXT
-  doc
-    .moveDown(2)
-    .fillColor("black")
-    .fontSize(14)
-    .text("This is to certify that", {
-      align: "center",
-    });
-
-  // MEMBER NAME
-  doc
-    .moveDown(0.5)
     .fillColor("#0C2C55")
+    .font("Helvetica-Bold")
     .fontSize(26)
-    .font("Helvetica-Bold")
-    .text(user.name, {
-      align: "center",
-    });
+    .text("CERTIFICATE OF MEMBERSHIP", 0, 190, { align: "center" });
 
-  // DESCRIPTION
   doc
-    .moveDown(0.5)
-    .fontSize(14)
-    .fillColor("black")
+    .moveTo(PAGE_W / 2 - 90, 225)
+    .lineTo(PAGE_W / 2 + 90, 225)
+    .lineWidth(1.5)
+    .strokeColor("#E1B12C")
+    .stroke();
+
+  // ---------- Body ----------
+  doc
+    .moveDown(3)
+    .fillColor("#444")
     .font("Helvetica")
-    .text("has been officially registered as a member of", {
+    .fontSize(14)
+    .text("This is to certify that", 0, 260, { align: "center" });
+
+  doc
+    .fillColor("#0C2C55")
+    .font("Helvetica-Bold")
+    .fontSize(30)
+    .text(user.name, 0, 290, { align: "center" });
+
+  // underline beneath name
+  const nameWidth = doc.widthOfString(user.name, {
+    font: "Helvetica-Bold",
+    fontSize: 30,
+  });
+  doc
+    .moveTo(PAGE_W / 2 - nameWidth / 2 - 10, 330)
+    .lineTo(PAGE_W / 2 + nameWidth / 2 + 10, 330)
+    .lineWidth(0.75)
+    .strokeColor("#296374")
+    .stroke();
+
+  doc
+    .fillColor("#444")
+    .font("Helvetica")
+    .fontSize(14)
+    .text("has been officially registered as a member of", 0, 350, {
       align: "center",
     });
 
   doc
-    .moveDown(0.3)
-    .fontSize(16)
     .fillColor("#296374")
     .font("Helvetica-Bold")
-    .text("Swabhiman Shiksha Sanskriti Samajothan", {
-      align: "center",
-    });
+    .fontSize(17)
+    .text(ORG_NAME, 60, 375, { align: "center", width: PAGE_W - 120 });
 
-  // MEMBER ID
+  const membershipLabel =
+    user.membershipType === "permanent"
+      ? "Permanent Membership"
+      : "Annual Membership";
+
   doc
-    .moveDown(1)
-    .fontSize(14)
-    .fillColor("black")
+    .fillColor("#444")
     .font("Helvetica")
-    .text(`Member ID: ${user.memberId}`, {
-      align: "center",
-    });
+    .fontSize(13)
+    .text(`Membership Type: ${membershipLabel}`, 0, 420, { align: "center" });
 
-  // SIGNATURES
-  const y = 650;
+  doc
+    .fillColor("#0C2C55")
+    .font("Helvetica-Bold")
+    .fontSize(15)
+    .text(`Member ID: ${user.memberId}`, 0, 445, { align: "center" });
 
-  doc.moveTo(80, y).lineTo(220, y).stroke();
-  doc.fontSize(12).text("Authorized Signatory", 80, y + 5);
+  if (user.validTill) {
+    doc
+      .fillColor("#444")
+      .font("Helvetica")
+      .fontSize(12)
+      .text(
+        `Valid Till: ${new Date(user.validTill).toLocaleDateString("en-IN")}`,
+        0,
+        470,
+        { align: "center" }
+      );
+  }
 
-  doc.moveTo(380, y).lineTo(520, y).stroke();
-  doc.text("President", 380, y + 5);
+  // ---------- Seal ----------
+  const sealX = PAGE_W / 2;
+  const sealY = 560;
+  doc
+    .circle(sealX, sealY, 45)
+    .lineWidth(2)
+    .strokeColor("#E1B12C")
+    .stroke();
+  doc
+    .circle(sealX, sealY, 38)
+    .lineWidth(1)
+    .strokeColor("#0C2C55")
+    .stroke();
+  doc
+    .fillColor("#0C2C55")
+    .font("Helvetica-Bold")
+    .fontSize(10)
+    .text("OFFICIAL", sealX - 40, sealY - 12, { width: 80, align: "center" })
+    .fontSize(9)
+    .text("SEAL", sealX - 40, sealY + 2, { width: 80, align: "center" });
+
+  // ---------- Date issued ----------
+  doc
+    .fillColor("#444")
+    .font("Helvetica")
+    .fontSize(11)
+    .text(
+      `Issued on: ${new Date().toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })}`,
+      0,
+      630,
+      { align: "center" }
+    );
+
+  // ---------- Signatures ----------
+  const y = 700;
+
+  doc.moveTo(80, y).lineTo(230, y).lineWidth(1).strokeColor("#000").stroke();
+  doc
+    .fillColor("#000")
+    .fontSize(12)
+    .font("Helvetica")
+    .text("Authorized Signatory", 80, y + 6, { width: 150, align: "center" });
+
+  doc.moveTo(PAGE_W - 230, y).lineTo(PAGE_W - 80, y).stroke();
+  doc.text("President", PAGE_W - 230, y + 6, { width: 150, align: "center" });
+
+  // ---------- Footer ----------
+  doc
+    .fillColor("#888")
+    .fontSize(9)
+    .text(
+      `${ORG_NAME} · This certificate is issued electronically and is valid without a physical signature.`,
+      40,
+      PAGE_H - 45,
+      { width: PAGE_W - 80, align: "center" }
+    );
 
   doc.end();
 

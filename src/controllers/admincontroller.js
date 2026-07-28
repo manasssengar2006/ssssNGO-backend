@@ -48,7 +48,14 @@ exports.approveMember = async (req, res) => {
     const pdfUser = {
       name: request.name,
       email: user.email, // ✅ FIXED
+      phone: request.phone,
       memberId,
+      membershipType: request.membershipType,
+      photoFile: request.photoFile, // ✅ needed so the ID card can show the photo
+      validTill:
+        request.membershipType === "yearly"
+          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          : null, // ✅ null = shown as "Lifetime" for permanent members
     };
 
     console.log("Generating ID...");
