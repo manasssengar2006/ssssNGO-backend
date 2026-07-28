@@ -67,10 +67,24 @@ router.post("/approve/:id", auth, admin, async (req, res) => {
 
     // PDF data (✅ correct source)
     const pdfUser = {
-      name: request.name,
-      email: user.email,
-      memberId: user.memberId,
-    };
+  name: request.name,
+  fatherName: request.fatherName,
+  email: user.email,
+  phone: request.phone,
+  memberId: user.memberId,
+
+  membershipType: request.membershipType,
+  amount: request.amount,
+
+  photoFile: request.photoFile,
+
+  approvedAt: new Date(),
+
+  validTill:
+    request.membershipType === "yearly"
+      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+      : null,
+};
 
     // generate PDFs
     const idCardPath = await generateIdCard(pdfUser);

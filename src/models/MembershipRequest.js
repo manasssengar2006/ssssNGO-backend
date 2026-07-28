@@ -4,69 +4,200 @@ const membershipSchema = new mongoose.Schema(
   {
     userId: {
       type: String,
+      required: true,
     },
 
-    // BASIC
+    // ================= BASIC =================
     name: {
       type: String,
       required: true,
       trim: true,
     },
-    fatherName: String,
-    motherName: String,
+
+    fatherName: {
+      type: String,
+      trim: true,
+    },
+
+    motherName: {
+      type: String,
+      trim: true,
+    },
 
     phone: {
       type: String,
       required: true,
+      trim: true,
     },
+
     email: {
       type: String,
       required: true,
       lowercase: true,
+      trim: true,
     },
 
-    // IDENTITY
-    aadhaarNumber: String,
-    panNumber: String,
+    // ================= IDENTITY =================
+    aadhaarNumber: {
+      type: String,
+      trim: true,
+    },
 
-    // LOCATION ✅ UPDATED
-    country: String,   // 🔥 ADDED
-    state: String,
-    city: String,
-    pincode: String,
+    panNumber: {
+      type: String,
+      trim: true,
+    },
 
-    // INCOME
-    annualIncome: String,
-    incomeSource: String,
+    // ================= LOCATION =================
+    country: {
+      type: String,
+      trim: true,
+    },
 
-    fatherOccupation: String,
-    motherOccupation: String,
+    state: {
+      type: String,
+      trim: true,
+    },
 
-    // ADDRESS
-    aadhaarAddress: String,
-    currentAddress: String,
+    city: {
+      type: String,
+      trim: true,
+    },
 
-    // FAMILY
-    siblings: String,
+    pincode: {
+      type: String,
+      trim: true,
+    },
 
-    maritalStatus: String,
-    wifeName: String,
-    children: String,
-    childrenNames: String,
+    // ================= INCOME =================
+    annualIncome: {
+      type: String,
+      trim: true,
+    },
 
-    // DOCUMENTS ✅ IMPROVED NAMING
-    photoFile: String,
-    aadhaarFile: String,
-    panFile: String,
+    incomeSource: {
+      type: String,
+      trim: true,
+    },
 
-    // STATUS
+    fatherOccupation: {
+      type: String,
+      trim: true,
+    },
+
+    motherOccupation: {
+      type: String,
+      trim: true,
+    },
+
+    // ================= ADDRESS =================
+    aadhaarAddress: {
+      type: String,
+      trim: true,
+    },
+
+    currentAddress: {
+      type: String,
+      trim: true,
+    },
+
+    // ================= FAMILY =================
+    siblings: {
+      type: String,
+      trim: true,
+    },
+
+    maritalStatus: {
+      type: String,
+      enum: ["single", "married"],
+    },
+
+    wifeName: {
+      type: String,
+      trim: true,
+    },
+
+    children: {
+      type: String,
+      enum: ["yes", "no"],
+    },
+
+    childrenNames: {
+      type: String,
+      trim: true,
+    },
+
+    // ================= MEMBERSHIP =================
+    membershipType: {
+      type: String,
+      enum: ["yearly", "permanent"],
+      required: true,
+    },
+
+    amount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+
+    validTill: {
+      type: Date,
+      default: null,
+    },
+
+    // ================= DOCUMENTS =================
+    photoFile: {
+      type: String,
+      default: "",
+    },
+
+    aadhaarFile: {
+      type: String,
+      default: "",
+    },
+
+    panFile: {
+      type: String,
+      default: "",
+    },
+
+    // ================= ID CARD =================
+    memberId: {
+      type: String,
+      default: "",
+    },
+
+    qrCode: {
+      type: String,
+      default: "",
+    },
+
+    idCardPath: {
+      type: String,
+      default: "",
+    },
+
+    // ================= APPROVAL =================
+    approvedBy: {
+      type: String,
+      default: "",
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // ================= STATUS =================
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected"], // 🔥 better control
+      enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 module.exports = mongoose.model("MembershipRequest", membershipSchema);
